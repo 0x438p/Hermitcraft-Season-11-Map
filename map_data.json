@@ -98,7 +98,7 @@
       "detailImages": [
         "Images/Bases/GeminitayBridge.png"
       ],
-      "primaryIconUrl": "Images/Hermits/Geminitay-face.png",
+      "primaryIconUrl": "Images/Hermits/GeminiTay-face.png",
       "additionalIcons": [],
       "iconSizeX": 20,
       "iconSizeY": 20
@@ -112,7 +112,7 @@
       "detailImages": [
         "Images/Bases/GeminitayBase.png"
       ],
-      "primaryIconUrl": "Images/Hermits/Geminitay-face.png",
+      "primaryIconUrl": "Images/Hermits/GeminiTay-face.png",
       "additionalIcons": [],
       "iconSizeX": 20,
       "iconSizeY": 20
