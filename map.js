@@ -250,6 +250,20 @@ window.panMap = function(direction) {
     }
 }
 
+function preloadImages() {
+    const imagesToPreload = new Set();
+
+    PINS.forEach(pin => {
+        if (pin.detailImages && Array.isArray(pin.detailImages)) {
+            pin.detailImages.forEach(url => imagesToPreload.add(url));
+        }
+    });
+
+    imagesToPreload.forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+}
 
 // PINS
 
@@ -487,13 +501,13 @@ function attachEventListeners() {
 }
 
 /**
-  Toggle Pin Button
+ Toggle Pin Button
  */
 function handlePinToggle() {
     const isChecked = pinToggleCheckbox.checked;
     const pinElements = document.querySelectorAll('.map-pin');
 
-    pinToggleLabel.textContent = isChecked ? 'Show Pins' : 'Hide Pins';   //defualt text
+    pinToggleLabel.textContent = isChecked ? 'Show Pins' : 'Hide Pins';    //defualt text
 
     pinElements.forEach(pin => {
         if (isChecked) {
@@ -564,6 +578,8 @@ async function initializeMap() {
         CONFIG = mapData.CONFIG;
         PINS = mapData.PINS;
         MAP_VIEWS = mapData.MAP_VIEWS;
+
+        preloadImages();
 
         const loadingViews = document.getElementById('loadingViews');
         if (loadingViews) loadingViews.remove();
