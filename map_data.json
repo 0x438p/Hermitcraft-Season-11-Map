@@ -1,0 +1,409 @@
+{
+  "CONFIG": {
+    "BASE_WIDTH": 2000,
+    "BASE_HEIGHT": 2000,
+    "INITIAL_ZOOM": 0.5,
+    "MIN_ZOOM": 0.48,
+    "MAX_ZOOM": 32.0,
+    "ZOOM_STEP": 0.1,
+    "ZOOM_SLIDER_MAX": 100,
+    "PAN_AMOUNT": 150,
+    "PIN_MIN_SCALE": 0.1,
+    "PIN_MAX_SCALE": 3.0,
+    "PIN_SCALE_STEP": 0.05,
+    "PIN_DEFAULT_SCALE": 1.5
+  },
+  "PINS": [
+    {
+      "id": 1,
+      "x": 1290,
+      "y": 780,
+      "title": "BdoubleO100",
+      "description": "BdoubleO100's Base",
+      "detailImages": [
+        "Images/Bases/BdoubleO100Base.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/BdoubleO100-face.png",
+      "additionalIcons": [
+      ],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 2,
+      "x": 750,
+      "y": 1000,
+      "title": "cubfan135",
+      "description": "Cubfan's Base",
+      "detailImages": [
+        "Images/Bases/Cubfan135Base.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Cubfan135-face.png",
+      "additionalIcons": [
+
+      ],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 3,
+      "x": 770,
+      "y": 1570,
+      "title": "docm77",
+      "description": "Doc's Base",
+      "detailImages": [
+        "Images/Bases/Docm77Base.png"
+
+      ],
+      "primaryIconUrl": "Images/Hermits/Docm77-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 4,
+      "x": 1050,
+      "y": 750,
+      "title": "Ethoslab",
+      "description": "Ethoslab's Base.",
+      "detailImages": [
+        "Images/Bases/EthosLabBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/EthosLab-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 5,
+      "x": 1040,
+      "y": 1240,
+      "title": "FalseSymmetry",
+      "description": "FalseSymmetry's Base",
+      "detailImages": [
+        "Images/Bases/FalseSymmetryBase.png",
+        "Images/Bases/FalseSymmetryBase2.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/FalseSymmetry-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 6,
+      "x": 830,
+      "y": 1095,
+      "title": "Geminitay",
+      "description": "Geminitay's Bridge",
+      "detailImages": [
+        "Images/Bases/GeminitayBridge.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Geminitay-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 7,
+      "x": 820,
+      "y": 1320,
+      "title": "Geminitay",
+      "description": "Geminitay's Base",
+      "detailImages": [
+        "Images/Bases/GeminitayBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Geminitay-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 8,
+      "x": 945,
+      "y": 1080,
+      "title": "GoodTimesWithScar",
+      "description": "GoodTimesWithScar's Base",
+      "detailImages": [
+        "Images/Bases/GoodTimesWithScarBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/GoodTimesWithScar-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 9,
+      "x": 870,
+      "y": 1130,
+      "title": "Grian",
+      "description": "Grian's Base",
+      "detailImages": [
+        "Images/Bases/GrianBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Grian-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 10,
+      "x": 820,
+      "y": 850,
+      "title": "Hypnotizd",
+      "description": "Hypnotizd's Base",
+      "detailImages": [
+        "Images/Bases/HypnotizdBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Hypnotizd-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 11,
+      "x": 620,
+      "y": 1020,
+      "title": "iJevin",
+      "description": "iJevin's Base",
+      "detailImages": [
+        "Images/Bases/iJevinBase.png",
+        "Images/Bases/iJevinBase2.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/iJevin-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 12,
+      "x": 585,
+      "y": 1245,
+      "title": "ImpulseSV",
+      "description": "ImpulseSV's Base",
+      "detailImages": [
+        "Images/Bases/ImpulseSVBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/ImpulseSV-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 13,
+      "x": 1155,
+      "y": 1055,
+      "title": "JoeHills",
+      "description": "JoeHills's Base",
+      "detailImages": [
+        "Images/Bases/JoeHillsBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/JoeHills-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 14,
+      "x": 895,
+      "y": 555,
+      "title": "Keralis",
+      "description": "Keralis's Base",
+      "detailImages": [
+        "Images/Bases/KeralisBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Keralis-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 15,
+      "x": 755,
+      "y": 1105,
+      "title": "MumboJumbo",
+      "description": "MumboJumbo's Base",
+      "detailImages": [
+        "Images/Bases/MumboBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/MumboJumbo-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 16,
+      "x": 1085,
+      "y": 1155,
+      "title": "PearlescentMoon",
+      "description": "PearlescentMoon's Base",
+      "detailImages": [
+        ""
+      ],
+      "primaryIconUrl": "Images/Hermits/PearlescentMoon-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 17,
+      "x": 1075,
+      "y": 1300,
+      "title": "Rendog",
+      "description": "Rendog's Base",
+      "detailImages": [
+        "Images/Bases/RendogBase.png",
+        "Images/Bases/RendogBase2.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Rendog-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 18,
+      "x": 475,
+      "y": 1315,
+      "title": "Skizzleman",
+      "description": "Skizzleman's Base",
+      "detailImages": [
+        "Images/Bases/SkizzlemanBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Skizzleman-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 19,
+      "x": 905,
+      "y": 1345,
+      "title": "SmallishBeans",
+      "description": "SmallishBeans's Base",
+      "detailImages": [
+        "Images/Bases/SmallishBeansBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/SmallishBeans-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 20,
+      "x": 605,
+      "y": 1445,
+      "title": "TangoTek",
+      "description": "TangoTek's Base",
+      "detailImages": [
+        "Images/Bases/TangoBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/TangoTek-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 21,
+      "x": 880,
+      "y": 770,
+      "title": "VintageBeef",
+      "description": "VintageBeef's Base",
+      "detailImages": [
+        ""
+      ],
+      "primaryIconUrl": "Images/Hermits/VintageBeef-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 22,
+      "x": 1075,
+      "y": 990,
+      "title": "Welsknight",
+      "description": "Welsknight's Base",
+      "detailImages": [
+        "Images/Bases/WelsknightBase.png",
+        "Images/Bases/WelsknightBase2.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Welsknight-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 23,
+      "x": 730,
+      "y": 910,
+      "title": "xBCrafted",
+      "description": "xBCrafted's Base",
+      "detailImages": [
+        "Images/Bases/xBCraftedBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/XBCrafted-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 24,
+      "x": 795,
+      "y": 1180,
+      "title": "Xisumavoid",
+      "description": "Xisumavoid's Base",
+      "detailImages": [
+        "Images/Bases/XisumaBase2.png",
+        "Images/Bases/XisumaBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Xisumavoid-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 25,
+      "x": 975,
+      "y": 990,
+      "title": "Zedaph",
+      "description": "Zedaph's Base",
+      "detailImages": [
+        "Images/Bases/ZedaphBase.png",
+        "Images/Bases/ZedaphBase2.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/Zedaph-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    },
+    {
+      "id": 26,
+      "x": 1185,
+      "y": 1155,
+      "title": "ZombieCleo",
+      "description": "ZombieCleo's Base",
+      "detailImages": [
+        "Images/Bases/ZombieCleoBase.png"
+      ],
+      "primaryIconUrl": "Images/Hermits/ZombieCleo-face.png",
+      "additionalIcons": [],
+      "iconSizeX": 20,
+      "iconSizeY": 20
+    }
+  ],
+  "MAP_VIEWS": [
+    {
+    "name": "Game View",
+    "url": "Images/hc11game.png",
+    "color": "bg-emerald-500"
+    },
+    {
+      "name": "Pixel Perfect",
+      "url": "Images/hc11.png",
+      "color": "bg-indigo-500"
+    },
+    {
+      "name": "Territory",
+      "url": "Images/hc11zone.png",
+      "color": "bg-gray-500"
+    }
+  ]
+}

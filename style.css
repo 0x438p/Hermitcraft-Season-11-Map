@@ -1,0 +1,151 @@
+/* style.css */
+
+.map-container {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    cursor: grab;
+  /*  touch-action: none; /* Prevents default touch behavior, allowing custom drag/pan */
+    border-radius: 0.85rem; /*rounded corners*/
+}
+.map-container::-webkit-scrollbar {
+    display: none;
+}
+
+
+.image-pixelated {
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* style for pins on the map*/
+
+.map-pin {
+    cursor: pointer;
+    transition: opacity 0.3s ease, box-shadow 0.1s ease; /* Added box-shadow transition */
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translate(-50%, -50%);
+
+    border-radius: 2%;
+
+    box-shadow: 0 0 0 2px #FFFFFF;
+}
+
+
+.map-pin:hover {
+    box-shadow:
+        0 0 0 3px #FFFFFF, /* Outline */
+        0 0 15px 5px rgba(255, 255, 255, 0.9); /* Glow */
+}
+
+
+
+.range-slider {
+    width: 100%;
+    height: 0.5rem;
+    background-color: #FFF; /* gray-700 */
+    border-radius: 0.5rem;
+    appearance: none;
+    cursor: pointer;
+}
+.range-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #2a5951; /* primary color */
+    cursor: pointer;
+}
+.range-slider::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background: #FFF;
+    cursor: pointer;
+    border: none;
+}
+
+/* Toggle Button */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 2.75rem; /* w-11 (44px) */
+  height: 1.5rem; /* h-6 (24px) */
+  cursor: pointer;
+}
+
+.toggle input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #374151;
+  transition: 0.4s;
+  border-radius: 9999px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1.25rem;
+  width: 1.25rem;
+  left: 2px;
+  top: 2px;
+  background-color: #FFF;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2a5951;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 0 2px #2a5951;
+}
+
+/* panning dpad*/
+
+.pan-button {
+    width: 2.5rem; /* 40px */
+    height: 2.5rem; /* 40px */
+    @apply flex items-center justify-center bg-gray-700 text-gray-300 transition duration-150 hover:bg-gray-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary;
+    border-radius: 0;
+}
+
+.grid.grid-cols-3 > button:nth-child(4) { /* Pan Left */
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+.grid.grid-cols-3 > button:nth-child(6) { /* Pan Right */
+    border-top-right-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+/* (Cell 4) */
+.grid.grid-cols-3 > button:nth-child(4) {
+    border-top-left-radius: 0.5rem;
+}
+/* (Cell 6) */
+.grid.grid-cols-3 > button:nth-child(6) {
+    border-top-right-radius: 0.5rem;
+}
+/* (Cell 7) */
+.grid.grid-cols-3 > button:nth-child(7) {
+    border-bottom-left-radius: 0.5rem;
+}
+/* (Cell 9) */
+.grid.grid-cols-3 > button:nth-child(9) {
+    border-bottom-right-radius: 0.5rem;
+}

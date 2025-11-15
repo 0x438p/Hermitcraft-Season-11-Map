@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Scrollable Map</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#2a5951',
+                        'secondary': '#10b981',
+                        'dark-bg': '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<!-- title-->
+
+<body class="bg-dark-bg min-h-screen flex flex-col items-center p-4 sm:p-8 text-gray-100 unselectable" style="font-family: Helvetica, Arial, sans-serif;">
+
+    <header class="text-center mb-8">
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-white">Hermitcraft Season 11 Map!</h1>
+
+
+    <p class="text-secondary mt-2 selectable text-2xl">
+      <span style="white-space: nowrap;">-2654832327628292536</span>
+    </p>
+
+
+    </header>
+<!-- map area-->
+    <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-8">
+        <div id="mapViewportWrapper" class="flex-grow aspect-square min-h-[400px] bg-gray-900 rounded-xl overflow-hidden relative shadow-2xl">
+            <div id="mapContainer" class="map-container w-full h-full overflow-scroll cursor-grab">
+              <div id="mapImageWrapper" class="relative transition-transform duration-300 transform-gpu origin-top-left">
+                  <img id="mapImage" src="Images/hc11.png" alt="Map" class="w-full h-full block image-pixelated" draggable="false">
+              </div>
+            </div>
+
+            <div id="loadingViews" class="absolute inset-0 flex items-center justify-center bg-gray-900 z-30 transition-opacity duration-500">
+                 <p class="text-white text-lg animate-pulse">Loading Map Data...</p>
+            </div>
+        </div>
+
+<!-- side bar-->
+
+        <div id="mapControls" class="w-full lg:w-64 bg-gray-800 p-4 rounded-xl shadow-lg flex flex-col space-y-4 h-fit">
+            <h2 class="text-xl font-bold text-white mb-2">Controls</h2>
+
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-300 block">Map Views</label>
+                <div id="viewButtons" class="space-y-2">
+                    </div>
+            </div>
+
+            <hr class="border-gray-700">
+
+            <div>
+                <label for="zoomSlider" class="text-sm font-medium text-gray-300 block mb-1">Zoom: <span id="currentZoomValue"></span></label>
+                <input type="range" id="zoomSlider" class="range-slider w-full" min="0.5" max="32.0" step="0.1" value="0.5">
+            </div>
+
+            <div>
+                <label for="pinScaleSlider" class="text-sm font-medium text-gray-300 block mb-1">Pin Scale</label>
+                <input type="range" id="pinScaleSlider" class="range-slider w-full" min="0.1" max="3.0" step="0.05" value="1.5">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label id="pinToggleLabel" for="pinToggle" class="text-sm font-medium text-gray-300">Show Pins</label>
+
+                <label class="toggle">
+                    <input type="checkbox" id="pinToggle" class="hidden" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <hr class="border-gray-700">
+
+            <div class="text-center">
+                <p class="text-sm font-medium text-gray-300 mb-2">Pan Map</p>
+                <div class="grid grid-cols-3 gap-0 mx-auto max-w-[120px] overflow-hidden">
+
+                    <div></div> <button id="panUp" class="pan-button rounded-t-lg" aria-label="Pan Up">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                    </button> <div></div> <button id="panLeft" class="pan-button rounded-l-lg" aria-label="Pan Left">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </button> <div class="pan-button bg-gray-800 cursor-default hover:bg-gray-800 focus:ring-0"></div>
+                    <button id="panRight" class="pan-button rounded-r-lg" aria-label="Pan Right">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button> <div></div> <button id="panDown" class="pan-button rounded-b-lg" aria-label="Pan Down">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    </button> <div></div> </div>
+                </div>
+
+        </div>
+    </div>
+
+<!-- pop-up window-->
+
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 transition-opacity duration-300" onclick="handleModalClick(event)">
+        <div id="modalContent" class="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-2xl transform transition-all duration-300 scale-95 opacity-0">
+            <div class="flex justify-between items-start border-b border-gray-700 pb-3 mb-4">
+                <h3 id="detailTitle" class="text-2xl font-bold text-white">Pin Title</h3>
+                <button onclick="closeModal()" class="modal-close-btn text-gray-400 hover:text-white transition focus:outline-none p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div id="galleryContainer" class="relative mb-4">
+                <img id="detailImage"
+                     src=""
+                     alt="Gallery View"
+                     class="w-full h-auto object-cover rounded-lg border border-gray-600 aspect-video transition duration-300"
+                     draggable="false">
+
+                <div id="imageCaption" class="h-6 mt-2 flex justify-center items-center"></div>
+
+                <button id="prevButton" class="absolute left-3 top-1/2 transform -translate-y-1/2 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition disabled:opacity-30 disabled:cursor-default focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button id="nextButton" class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition disabled:opacity-30 disabled:cursor-default focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            <div id="galleryIndicators" class="flex justify-center space-x-2 mb-4"></div>
+
+            <p id="detailDescription" class="text-gray-300 text-sm border-t border-gray-700 pt-4"></p>
+
+        </div>
+    </div>
+
+
+    <script src="map.js"></script>
+</body>
+</html>
