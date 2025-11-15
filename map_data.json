@@ -5,12 +5,12 @@
     "INITIAL_ZOOM": 0.5,
     "MIN_ZOOM": 0.48,
     "MAX_ZOOM": 32.0,
-    "ZOOM_STEP": 0.1,
+    "ZOOM_STEP": 0.5,
     "ZOOM_SLIDER_MAX": 100,
     "PAN_AMOUNT": 150,
-    "PIN_MIN_SCALE": 0.1,
+    "PIN_MIN_SCALE": 0.2,
     "PIN_MAX_SCALE": 3.0,
-    "PIN_SCALE_STEP": 0.05,
+    "PIN_SCALE_STEP": 0.1,
     "PIN_DEFAULT_SCALE": 1.5
   },
   "PINS": [

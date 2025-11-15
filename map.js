@@ -62,11 +62,11 @@ function calculateSquareSize() {
     mapContainer.style.width = `${size}px`;
     mapContainer.style.height = `${size}px`;
 
-    applyZoom(true);
+    applyZoom(true, parseFloat(zoomSlider.value));
 }
 
 
-function applyZoom(recenterViewAfterZoom = false) {
+function applyZoom(recenterViewAfterZoom = false, newSliderValue = null) {
     if (!CONFIG.BASE_WIDTH) return;
 
     const newWidth = CONFIG.BASE_WIDTH * currentZoom;
@@ -118,7 +118,9 @@ function applyZoom(recenterViewAfterZoom = false) {
     mapContainer.scrollLeft = newScrollX;
     mapContainer.scrollTop = newScrollY;
 
-    zoomSlider.value = currentZoom;
+    if (newSliderValue !== null) {
+        zoomSlider.value = newSliderValue;
+    }
 }
 
 
@@ -183,14 +185,24 @@ function handleWheelZoom(e) {
     e.preventDefault();
 
     const isZoomIn = e.deltaY < 0;
-    const factor = isZoomIn ? (1 + CONFIG.ZOOM_STEP) : (1 - CONFIG.ZOOM_STEP);
+
+    const oldSliderVal = parseFloat(zoomSlider.value);
+    let newSliderVal = oldSliderVal + (isZoomIn ? CONFIG.ZOOM_STEP : -CONFIG.ZOOM_STEP);
+
+    const Z_min = CONFIG.MIN_ZOOM;
+    const Z_max = CONFIG.MAX_ZOOM;
+
+    newSliderVal = Math.max(Z_min, Math.min(Z_max, newSliderVal));
+
+    if (newSliderVal === oldSliderVal) return;
+
+    const Range = Z_max - Z_min;
+    const P = (newSliderVal - Z_min) / Range;
+    const P_curved = Math.pow(P, 2);
+    const newZoom = Z_min + (P_curved * Range);
 
     const oldZoom = currentZoom;
-    let newZoom = currentZoom * factor;
-
-    newZoom = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, newZoom));
-
-    if (newZoom === currentZoom) return;
+    currentZoom = newZoom;
 
     const rect = mapContainer.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
@@ -205,8 +217,7 @@ function handleWheelZoom(e) {
     const mapPointX = (mouseX + preZoomScrollX) - marginX;
     const mapPointY = (mouseY + preZoomScrollY) - marginY;
 
-    currentZoom = newZoom;
-    applyZoom(false);
+    applyZoom(false, newSliderVal);
 
     const zoomRatio = currentZoom / oldZoom;
 
@@ -215,18 +226,25 @@ function handleWheelZoom(e) {
 
     mapContainer.scrollLeft = newScrollX;
     mapContainer.scrollTop = newScrollY;
-
-    zoomSlider.value = currentZoom;
 }
 
 window.handleZoomSlider = function(value) {
-    currentZoom = parseFloat(value);
-    applyZoom(true);
+    const Z_linear = parseFloat(value);
+    const Z_min = CONFIG.MIN_ZOOM;
+    const Z_max = CONFIG.MAX_ZOOM;
+    const Range = Z_max - Z_min;
+
+    const P = (Z_linear - Z_min) / Range;
+    const P_curved = Math.pow(P, 2);
+
+    currentZoom = Z_min + (P_curved * Range);
+
+    applyZoom(true, Z_linear);
 }
 
 window.handlePinScaleSlider = function(value) {
     pinCustomScale = parseFloat(value);
-    applyZoom(false);
+    applyZoom(false, null);
 }
 
 window.panMap = function(direction) {
@@ -314,7 +332,7 @@ function renderPins() {
         pinFragment.appendChild(pinElement);
     });
     mapWrapper.appendChild(pinFragment);
-    applyZoom(false);
+    applyZoom(false, parseFloat(zoomSlider.value));
 }
 
 
@@ -354,7 +372,6 @@ function enableControls() {
 }
 
 //window
-
 window.closeModal = function() {
     modalContent.classList.add('scale-95', 'opacity-0');
     setTimeout(() => {
@@ -500,9 +517,7 @@ function attachEventListeners() {
     window.addEventListener('keydown', handleKeyPan);
 }
 
-/**
- Toggle Pin Button
- */
+//Toggle Pin Button
 function handlePinToggle() {
     const isChecked = pinToggleCheckbox.checked;
     const pinElements = document.querySelectorAll('.map-pin');
@@ -532,7 +547,6 @@ function handlePinToggle() {
 
 
 //panning
-
 window.handleKeyPan = function(e) {
     if (detailModal.classList.contains('flex') || e.target.tagName === 'INPUT') return;
 
@@ -565,8 +579,7 @@ window.handleKeyPan = function(e) {
 
 
 
-// --- initializeMap ---
-
+//initializeMap
 async function initializeMap() {
     try {
         const response = await fetch('map_data.json');
@@ -603,13 +616,22 @@ async function initializeMap() {
     zoomSlider.min = CONFIG.MIN_ZOOM;
     zoomSlider.max = CONFIG.MAX_ZOOM;
     zoomSlider.step = CONFIG.ZOOM_STEP;
-    zoomSlider.value = CONFIG.INITIAL_ZOOM;
 
     pinScaleSlider.min = CONFIG.PIN_MIN_SCALE;
     pinScaleSlider.max = CONFIG.PIN_MAX_SCALE;
+
+    pinCustomScale = CONFIG.PIN_DEFAULT_SCALE;
     pinScaleSlider.value = pinCustomScale;
 
-    currentZoom = CONFIG.INITIAL_ZOOM;
+    const initialSliderValue = CONFIG.INITIAL_ZOOM;
+    zoomSlider.value = initialSliderValue;
+
+    const Z_min = CONFIG.MIN_ZOOM;
+    const Z_max = CONFIG.MAX_ZOOM;
+    const Range = Z_max - Z_min;
+    const P = (initialSliderValue - Z_min) / Range;
+    const P_curved = Math.pow(P, 2);
+    currentZoom = Z_min + (P_curved * Range);
 
     renderPins();
     renderViewButtons();
