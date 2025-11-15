@@ -93,10 +93,10 @@
       "id": 6,
       "x": 830,
       "y": 1095,
-      "title": "Geminitay",
-      "description": "Geminitay's Bridge",
+      "title": "GeminiTay",
+      "description": "GeminiTay's Bridge",
       "detailImages": [
-        "Images/Bases/GeminitayBridge.png"
+        "Images/Bases/GeminiTayBridge.png"
       ],
       "primaryIconUrl": "Images/Hermits/GeminiTay-face.png",
       "additionalIcons": [],
@@ -107,10 +107,10 @@
       "id": 7,
       "x": 820,
       "y": 1320,
-      "title": "Geminitay",
-      "description": "Geminitay's Base",
+      "title": "GeminiTay",
+      "description": "GeminiTay's Base",
       "detailImages": [
-        "Images/Bases/GeminitayBase.png"
+        "Images/Bases/GeminiTayBase.png"
       ],
       "primaryIconUrl": "Images/Hermits/GeminiTay-face.png",
       "additionalIcons": [],
