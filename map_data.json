@@ -237,7 +237,7 @@
       "title": "PearlescentMoon",
       "description": "PearlescentMoon's Base",
       "detailImages": [
-        ""
+        "Images/Bases/PearlBase.png"
       ],
       "primaryIconUrl": "Images/Hermits/PearlescentMoon-face.png",
       "additionalIcons": [],
@@ -317,7 +317,7 @@
     },
     {
       "id": 22,
-      "x": 1075,
+      "x": 1035,
       "y": 990,
       "title": "Welsknight",
       "description": "Welsknight's Base",
