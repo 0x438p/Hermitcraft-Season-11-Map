@@ -99,8 +99,8 @@ mapContainer.addEventListener('touchstart', (e) => {
 
 mapContainer.addEventListener('touchmove', (e) => {
 
-        //pinch
-        if (touchState.pinch && e.touches.length === 2) {
+    // pinch
+    if (touchState.pinch && e.touches.length === 2) {
 
         const t0 = e.touches[0];
         const t1 = e.touches[1];
@@ -125,49 +125,31 @@ mapContainer.addEventListener('touchmove', (e) => {
         const sliderValue = Z_min + (Plinear * Range);
         zoomSlider.value = sliderValue;
 
-        //midpoint of zoom
-        const rect = mapContainer.getBoundingClientRect();
-        const localX = midX - rect.left;   // x inside container
-        const localY = midY - rect.top;    // y inside container
 
-        const mapX_before = mapContainer.scrollLeft + localX;
-        const mapY_before = mapContainer.scrollTop + localY;
+        const rect = mapContainer.getBoundingClientRect();
+        const localX = midX - rect.left;
+        const localY = midY - rect.top;
+
+        const startMarginX = parseFloat(mapWrapper.style.marginLeft) || 0;
+        const startMarginY = parseFloat(mapWrapper.style.marginTop) || 0;
+
+        const mapX_before = mapContainer.scrollLeft + localX - startMarginX;
+        const mapY_before = mapContainer.scrollTop + localY - startMarginY;
 
         applyZoom(false, sliderValue, true);
 
+        const endMarginX = parseFloat(mapWrapper.style.marginLeft) || 0;
+        const endMarginY = parseFloat(mapWrapper.style.marginTop) || 0;
+
         const zoomRatio = currentZoom / prevZoom;
 
-        const mapX_after = mapX_before * zoomRatio;
-        const mapY_after = mapY_before * zoomRatio;
 
-        const newScrollLeft = mapX_after - localX;
-        const newScrollTop = mapY_after - localY;
+        const newScrollLeft = (mapX_before * zoomRatio) + endMarginX - localX;
+        const newScrollTop = (mapY_before * zoomRatio) + endMarginY - localY;
 
         mapContainer.scrollLeft = newScrollLeft;
         mapContainer.scrollTop = newScrollTop;
 
-        e.preventDefault();
-        return;
-    }
-
-      //panning
-    if (touchState.dragging && e.touches.length === 1) {
-        const x = e.touches[0].clientX;
-        const y = e.touches[0].clientY;
-        const dx = x - touchState.lastX;
-        const dy = y - touchState.lastY;
-
-        if (Math.abs(x - touchState.startX) > 10 || Math.abs(y - touchState.startY) > 10) {
-            touchState.moved = true;
-        }
-
-        translateX += dx;
-        translateY += dy;
-
-        touchState.lastX = x;
-        touchState.lastY = y;
-
-        applyZoom(false, parseFloat(zoomSlider.value)); // replace old applyTransforms
 
         e.preventDefault();
         return;
@@ -208,6 +190,8 @@ function applyZoom(recenterViewAfterZoom = false, newSliderValue = null, suppres
     mapWrapper.style.height = `${newHeight}px`;
     mapWrapper.style.transform = '';
 
+
+
     const pinFinalScale = pinCustomScale;
     const pins = document.querySelectorAll('.map-pin');
 
@@ -240,16 +224,15 @@ function applyZoom(recenterViewAfterZoom = false, newSliderValue = null, suppres
     }
 
     if (!suppressScrollReset) {
-        if (newHeight < mapContainerHeight) {
-            topOffset = (mapContainerHeight - newHeight) / 2;
-            newScrollY = 0;
-        } else if (recenterViewAfterZoom) {
-            newScrollY = (newHeight - mapContainerHeight) / 2;
-        }
+        mapContainer.scrollLeft = newScrollX;
+        mapContainer.scrollTop = newScrollY;
     }
 
     mapWrapper.style.marginLeft = `${leftOffset}px`;
     mapWrapper.style.marginTop = `${topOffset}px`;
+
+
+
 
     mapContainer.scrollLeft = newScrollX;
     mapContainer.scrollTop = newScrollY;
