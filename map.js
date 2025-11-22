@@ -54,68 +54,92 @@ let scrollTop;
  */
 
 /* Touch Support */
-let touchStartDistance = 0;
-let initialZoom = 1;
-let touchDragging = false;
-let lastTouchX = 0;
-let lastTouchY = 0;
+let touchState = {
+    dragging: false,
+    pinch: false,
+    lastX: 0,
+    lastY: 0,
+    startX: 0,
+    startY: 0,
+    moved: false,
+    pinchStartDist: 0,
+    pinchStartZoom: 1
+};
 
-function getTouchDistance(touches) {
+function distance(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
-    return Math.sqrt(dx*dx + dy*dy);
+    return Math.hypot(dx, dy);
 }
 
-// pinch drag
 mapContainer.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
-        touchDragging = true;
-        lastTouchX = e.touches[0].clientX;
-        lastTouchY = e.touches[0].clientY;
+        touchState.dragging = true;
+        touchState.pinch = false;
+        touchState.moved = false;
+
+        touchState.startX = e.touches[0].clientX;
+        touchState.startY = e.touches[0].clientY;
+        touchState.lastX = touchState.startX;
+        touchState.lastY = touchState.startY;
     }
 
     if (e.touches.length === 2) {
-        touchDragging = false;
-        touchStartDistance = getTouchDistance(e.touches);
-        initialZoom = currentZoom;
+        touchState.dragging = false;
+        touchState.pinch = true;
+        touchState.moved = true;
+
+        touchState.pinchStartDist = distance(e.touches);
+        touchState.pinchStartZoom = currentZoom;
     }
 
     e.preventDefault();
 }, { passive: false });
 
 mapContainer.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1 && touchDragging) {
-        const dx = e.touches[0].clientX - lastTouchX;
-        const dy = e.touches[0].clientY - lastTouchY;
+    if (touchState.pinch && e.touches.length === 2) {
+        const newDist = distance(e.touches);
+        let scaleFactor = newDist / touchState.pinchStartDist;
 
-        translateX += dx;
-        translateY += dy;
-
-        lastTouchX = e.touches[0].clientX;
-        lastTouchY = e.touches[0].clientY;
-
-        applyTransforms();
-    }
-
-    if (e.touches.length === 2) {
-        const newDist = getTouchDistance(e.touches);
-        const scaleChange = newDist / touchStartDistance;
-
-        let newZoom = initialZoom * scaleChange;
-
+        let newZoom = touchState.pinchStartZoom * scaleFactor;
         newZoom = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, newZoom));
 
         currentZoom = newZoom;
         zoomSlider.value = newZoom;
         applyTransforms();
+        e.preventDefault();
+        return;
     }
 
-    e.preventDefault();
+    if (touchState.dragging && e.touches.length === 1) {
+        const x = e.touches[0].clientX;
+        const y = e.touches[0].clientY;
+        const dx = x - touchState.lastX;
+        const dy = y - touchState.lastY;
+
+        if (Math.abs(x - touchState.startX) > 10 || Math.abs(y - touchState.startY) > 10) {
+            touchState.moved = true;
+        }
+
+        translateX += dx;
+        translateY += dy;
+
+        touchState.lastX = x;
+        touchState.lastY = y;
+
+        applyTransforms();
+        e.preventDefault();
+        return;
+    }
 }, { passive: false });
 
 mapContainer.addEventListener('touchend', () => {
-    touchDragging = false;
+    touchState.dragging = false;
+    touchState.pinch = false;
 });
+
+
+
 
 
 function calculateSquareSize() {
@@ -384,19 +408,25 @@ function renderPins() {
         `;
 
 
-        let touchMoved = false;
+        let touchMovementTolerance = 100;      //amount needed to drag inorder to count as a click instead of panning
 
-        pinElement.addEventListener('touchstart', () => {
-            touchMoved = false;
+        pinElement.addEventListener('touchstart', (e) => {
+            pinElement._touchMoved = false;
+            pinElement._touchStartX = e.touches[0].clientX;
+            pinElement._touchStartY = e.touches[0].clientY;
         }, { passive: true });
 
-        pinElement.addEventListener('touchmove', () => {
-            touchMoved = true;
+        pinElement.addEventListener('touchmove', (e) => {
+            const dx = e.touches[0].clientX - pinElement._touchStartX;
+            const dy = e.touches[0].clientY - pinElement._touchStartY;
+            if (Math.abs(dx) > touchMovementTolerance || Math.abs(dy) > touchMovementTolerance) {
+                pinElement._touchMoved = true;
+            }
         }, { passive: true });
 
         pinElement.addEventListener('touchend', (e) => {
             e.stopPropagation();
-            if (!touchMoved) showDetail(pin);
+            if (!pinElement._touchMoved) showDetail(pin);
         }, { passive: true });
 
         pinElement.addEventListener('click', (e) => {
