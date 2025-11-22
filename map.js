@@ -52,6 +52,72 @@ let scrollTop;
 /**
  * map viewport
  */
+
+/* Touch Support */
+let touchStartDistance = 0;
+let initialZoom = 1;
+let touchDragging = false;
+let lastTouchX = 0;
+let lastTouchY = 0;
+
+function getTouchDistance(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx*dx + dy*dy);
+}
+
+// pinch drag
+mapContainer.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+        touchDragging = true;
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+    }
+
+    if (e.touches.length === 2) {
+        touchDragging = false;
+        touchStartDistance = getTouchDistance(e.touches);
+        initialZoom = currentZoom;
+    }
+
+    e.preventDefault();
+}, { passive: false });
+
+mapContainer.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && touchDragging) {
+        const dx = e.touches[0].clientX - lastTouchX;
+        const dy = e.touches[0].clientY - lastTouchY;
+
+        translateX += dx;
+        translateY += dy;
+
+        lastTouchX = e.touches[0].clientX;
+        lastTouchY = e.touches[0].clientY;
+
+        applyTransforms();
+    }
+
+    if (e.touches.length === 2) {
+        const newDist = getTouchDistance(e.touches);
+        const scaleChange = newDist / touchStartDistance;
+
+        let newZoom = initialZoom * scaleChange;
+
+        newZoom = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, newZoom));
+
+        currentZoom = newZoom;
+        zoomSlider.value = newZoom;
+        applyTransforms();
+    }
+
+    e.preventDefault();
+}, { passive: false });
+
+mapContainer.addEventListener('touchend', () => {
+    touchDragging = false;
+});
+
+
 function calculateSquareSize() {
     if (!mapViewportWrapper || !mapContainer || !CONFIG.BASE_WIDTH) return;
 
@@ -318,15 +384,24 @@ function renderPins() {
         `;
 
 
+        let touchMoved = false;
+
+        pinElement.addEventListener('touchstart', () => {
+            touchMoved = false;
+        }, { passive: true });
+
+        pinElement.addEventListener('touchmove', () => {
+            touchMoved = true;
+        }, { passive: true });
+
+        pinElement.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            if (!touchMoved) showDetail(pin);
+        }, { passive: true });
+
         pinElement.addEventListener('click', (e) => {
             e.stopPropagation();
-
-            if (isDragging) {
-                isDragging = false;
-                return;
-            }
-
-            showDetail(pin);
+            if (!isDragging) showDetail(pin);
         });
 
         pinFragment.appendChild(pinElement);
