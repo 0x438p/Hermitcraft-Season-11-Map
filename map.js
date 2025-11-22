@@ -48,6 +48,7 @@ let startY;
 let scrollLeft;
 let scrollTop;
 
+let isPinchZooming = false;
 
 /**
  * map viewport
@@ -132,7 +133,7 @@ mapContainer.addEventListener('touchmove', (e) => {
         const mapX_before = mapContainer.scrollLeft + localX;
         const mapY_before = mapContainer.scrollTop + localY;
 
-        applyZoom(false, sliderValue);
+        applyZoom(false, sliderValue, true);  
 
         const zoomRatio = currentZoom / prevZoom;
 
@@ -197,7 +198,7 @@ function calculateSquareSize() {
 }
 
 
-function applyZoom(recenterViewAfterZoom = false, newSliderValue = null) {
+function applyZoom(recenterViewAfterZoom = false, newSliderValue = null, suppressScrollReset = false) {
     if (!CONFIG.BASE_WIDTH) return;
 
     const newWidth = CONFIG.BASE_WIDTH * currentZoom;
@@ -229,18 +230,22 @@ function applyZoom(recenterViewAfterZoom = false, newSliderValue = null) {
     let newScrollX = mapContainer.scrollLeft;
     let newScrollY = mapContainer.scrollTop;
 
-    if (newWidth < mapContainerWidth) {
-        leftOffset = (mapContainerWidth - newWidth) / 2;
-        newScrollX = 0;
-    } else if (recenterViewAfterZoom) {
-        newScrollX = (newWidth - mapContainerWidth) / 2;
+    if (!suppressScrollReset) {
+        if (newWidth < mapContainerWidth) {
+            leftOffset = (mapContainerWidth - newWidth) / 2;
+            newScrollX = 0;
+        } else if (recenterViewAfterZoom) {
+            newScrollX = (newWidth - mapContainerWidth) / 2;
+        }
     }
 
-    if (newHeight < mapContainerHeight) {
-        topOffset = (mapContainerHeight - newHeight) / 2;
-        newScrollY = 0;
-    } else if (recenterViewAfterZoom) {
-        newScrollY = (newHeight - mapContainerHeight) / 2;
+    if (!suppressScrollReset) {
+        if (newHeight < mapContainerHeight) {
+            topOffset = (mapContainerHeight - newHeight) / 2;
+            newScrollY = 0;
+        } else if (recenterViewAfterZoom) {
+            newScrollY = (newHeight - mapContainerHeight) / 2;
+        }
     }
 
     mapWrapper.style.marginLeft = `${leftOffset}px`;
