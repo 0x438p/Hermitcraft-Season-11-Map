@@ -133,7 +133,7 @@ mapContainer.addEventListener('touchmove', (e) => {
         const mapX_before = mapContainer.scrollLeft + localX;
         const mapY_before = mapContainer.scrollTop + localY;
 
-        applyZoom(false, sliderValue, true);  
+        applyZoom(false, sliderValue, true);
 
         const zoomRatio = currentZoom / prevZoom;
 
@@ -270,6 +270,8 @@ function getEventPoint(e) {
 //Drag Start
 
 function startDrag(e) {
+    if (e.touches && e.touches.length > 1) return;
+
     if (e.target.closest('#detailModal') || e.target.closest('#mapControls')) return;
 
     const point = getEventPoint(e);
@@ -289,6 +291,8 @@ function startDrag(e) {
 
 //Drag Move
 function moveDrag(e) {
+    if (e.touches && e.touches.length > 1) return;
+
     if (!isDown) return;
     e.preventDefault();
 
@@ -311,6 +315,8 @@ function moveDrag(e) {
 //Drag End.
 
 function endDrag() {
+    if (e.touches && e.touches.length > 1) return;
+
     isDown = false;
     mapContainer.classList.remove('dragging');
 }
