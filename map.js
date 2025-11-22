@@ -98,8 +98,8 @@ mapContainer.addEventListener('touchstart', (e) => {
 
 mapContainer.addEventListener('touchmove', (e) => {
 
-    //pinch
-    if (touchState.pinch && e.touches.length === 2) {
+        //pinch
+        if (touchState.pinch && e.touches.length === 2) {
 
         const t0 = e.touches[0];
         const t1 = e.touches[1];
@@ -108,12 +108,13 @@ mapContainer.addEventListener('touchmove', (e) => {
         const midY = (t0.clientY + t1.clientY) / 2;
 
         const newDist = distance(e.touches);
-        let scaleFactor = newDist / touchState.pinchStartDist;
+        const scaleFactor = newDist / touchState.pinchStartDist;
 
         let newZoom = touchState.pinchStartZoom * scaleFactor;
         newZoom = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, newZoom));
 
-        if (newZoom === currentZoom) return; // avoid redundant work
+        const prevZoom = currentZoom;
+        currentZoom = newZoom;
 
         const Z_min = CONFIG.MIN_ZOOM;
         const Z_max = CONFIG.MAX_ZOOM;
@@ -121,30 +122,28 @@ mapContainer.addEventListener('touchmove', (e) => {
         const Pcurved = (newZoom - Z_min) / Range;
         const Plinear = Math.sqrt(Math.max(0, Pcurved));
         const sliderValue = Z_min + (Plinear * Range);
-
-        const rect = mapContainer.getBoundingClientRect();
-        const mouseX = midX - rect.left;
-        const mouseY = midY - rect.top;
-
-        const prevZoom = currentZoom;
-        currentZoom = newZoom;
         zoomSlider.value = sliderValue;
 
-        const marginX = parseFloat(mapWrapper.style.marginLeft || 0);
-        const marginY = parseFloat(mapWrapper.style.marginTop || 0);
+        //midpoint of zoom
+        const rect = mapContainer.getBoundingClientRect();
+        const localX = midX - rect.left;   // x inside container
+        const localY = midY - rect.top;    // y inside container
 
-        const mapPointX = mouseX + mapContainer.scrollLeft - marginX;
-        const mapPointY = mouseY + mapContainer.scrollTop - marginY;
-
+        const mapX_before = mapContainer.scrollLeft + localX;
+        const mapY_before = mapContainer.scrollTop + localY;
 
         applyZoom(false, sliderValue);
 
         const zoomRatio = currentZoom / prevZoom;
-        const newScrollX = (mapPointX * zoomRatio) + marginX - mouseX;
-        const newScrollY = (mapPointY * zoomRatio) + marginY - mouseY;
 
-        mapContainer.scrollLeft = newScrollX;
-        mapContainer.scrollTop = newScrollY;
+        const mapX_after = mapX_before * zoomRatio;
+        const mapY_after = mapY_before * zoomRatio;
+
+        const newScrollLeft = mapX_after - localX;
+        const newScrollTop = mapY_after - localY;
+
+        mapContainer.scrollLeft = newScrollLeft;
+        mapContainer.scrollTop = newScrollTop;
 
         e.preventDefault();
         return;
