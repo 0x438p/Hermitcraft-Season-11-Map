@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Scrollable Map</title>
+    <title>Hermitcraft Season 11 Map</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="style.css">
     <script>
@@ -21,8 +21,6 @@
     </script>
 </head>
 
-<!-- title-->
-
 <body class="bg-dark-bg min-h-screen flex flex-col items-center p-4 sm:p-8 text-gray-100 unselectable" style="font-family: Helvetica, Arial, sans-serif;">
 
     <header class="text-center mb-8">
@@ -30,7 +28,8 @@
 
 
     <p class="text-secondary mt-2 selectable text-2xl">
-      <span style="white-space: nowrap;">-2654832327628292536</span><br>
+      <!-- Added user-select: all; to ensure the negative sign is selected with the number -->
+      <span style="white-space: nowrap; -webkit-user-select: all; user-select: all;">-2654832327628292536</span><br>
     </p>
 
 
@@ -38,10 +37,13 @@
 <!-- map area-->
     <div class="w-full max-w-7xl flex flex-col lg:flex-row gap-8">
         <div id="mapViewportWrapper" class="flex-grow aspect-square min-h-[400px] bg-gray-900 rounded-xl overflow-hidden relative shadow-2xl">
-            <div id="mapContainer" class="map-container w-full h-full overflow-scroll cursor-grab">
-              <div id="mapImageWrapper" class="relative transition-transform duration-300 transform-gpu origin-top-left">
+            <!-- Updated structure to match new map.js overlay logic -->
+            <div id="mapContainer" class="map-container w-full h-full relative bg-gray-800">
+              <!-- Removed transition classes to prevent panning lag -->
+              <div id="mapImageWrapper" class="absolute top-0 left-0 origin-top-left">
                   <img id="mapImage" src="Images/hc11.png" alt="Map" class="w-full h-full block image-pixelated" draggable="false">
               </div>
+              <!-- Pin Overlay will be injected here by map.js -->
             </div>
 
             <div id="loadingViews" class="absolute inset-0 flex items-center justify-center bg-gray-900 z-30 transition-opacity duration-500">

@@ -1,790 +1,464 @@
+// map.js
+
 let CONFIG = {};
 let PINS = [];
 let MAP_VIEWS = [];
 
-let currentPinGallery = [];
-let currentImageIndex = 0;
-
 const mapContainer = document.getElementById('mapContainer');
-const mapWrapper = document.getElementById('mapImageWrapper');
+const mapWrapper = document.getElementById('mapImageWrapper'); // Holds the Image
 const mapImage = document.getElementById('mapImage');
-const mapViewportWrapper = document.getElementById('mapViewportWrapper');
-const detailModal = document.getElementById('detailModal');
-const modalContent = document.getElementById('modalContent');
-const viewButtonsContainer = document.getElementById('viewButtons');
+let pinOverlayLayer = null; // Will hold the Pins (Created in JS)
+
+//ui
 const zoomSlider = document.getElementById('zoomSlider');
+const currentZoomValueLabel = document.getElementById('currentZoomValue');
 const pinScaleSlider = document.getElementById('pinScaleSlider');
 const pinToggleCheckbox = document.getElementById('pinToggle');
-const pinToggleLabel = document.getElementById('pinToggleLabel'); // Added label reference
-
-const controlButtons = [
-    zoomSlider,
-    pinScaleSlider,
-    pinToggleCheckbox,
-    document.getElementById('panUp'),
-    document.getElementById('panDown'),
-    document.getElementById('panLeft'),
-    document.getElementById('panRight')
-];
-
+const pinToggleLabel = document.getElementById('pinToggleLabel');
+const viewButtonsContainer = document.getElementById('viewButtons');
+//popup
+const detailModal = document.getElementById('detailModal');
+const modalContent = document.getElementById('modalContent');
 const detailTitle = document.getElementById('detailTitle');
+const detailDescription = document.getElementById('detailDescription');
 const detailImage = document.getElementById('detailImage');
-const imageCaption = document.getElementById('imageCaption');
 const galleryIndicators = document.getElementById('galleryIndicators');
 const prevButton = document.getElementById('prevButton');
 const nextButton = document.getElementById('nextButton');
 const galleryContainer = document.getElementById('galleryContainer');
-const detailDescription = document.getElementById('detailDescription');
 
-
-let currentZoom = 1.0;
-let pinCustomScale = 1.0;
-
-let isDown = false;
-let isDragging = false; // Flag to check if movement exceeded threshold
-const DRAG_THRESHOLD = 5; // Movement threshold in pixels
-let startX;
-let startY;
-let scrollLeft;
-let scrollTop;
-
-let isPinchZooming = false;
-
-/**
- * map viewport
- */
-
-/* Touch Support */
-let touchState = {
-    dragging: false,
-    pinch: false,
-    lastX: 0,
-    lastY: 0,
-    startX: 0,
-    startY: 0,
-    moved: false,
-    pinchStartDist: 0,
-    pinchStartZoom: 1
+let state = {
+    scale: 0.5,
+    x: 0,
+    y: 0,
+    isDragging: false,
+    hasMoved: false,
 };
 
-function distance(touches) {
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.hypot(dx, dy);
-}
+let pinSettings = {
+    customScale: 1.5,
+    visible: true
+};
 
-mapContainer.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-        touchState.dragging = true;
-        touchState.pinch = false;
-        touchState.moved = false;
+let galleryState = { images: [], currentIndex: 0 };
+let pinElementsCache = [];
+let isRenderScheduled = false;
 
-        touchState.startX = e.touches[0].clientX;
-        touchState.startY = e.touches[0].clientY;
-        touchState.lastX = touchState.startX;
-        touchState.lastY = touchState.startY;
-    }
+async function initializeMap() {
+    try {
+        const response = await fetch('map_data.json');
+        if (!response.ok) throw new Error("404");
+        const data = await response.json();
 
-    if (e.touches.length === 2) {
-        touchState.dragging = false;
-        touchState.pinch = true;
-        touchState.moved = true;
+        CONFIG = data.CONFIG;
+        PINS = data.PINS;
+        MAP_VIEWS = data.MAP_VIEWS;
 
-        touchState.pinchStartDist = distance(e.touches);
-        touchState.pinchStartZoom = currentZoom;
-    }
+        mapWrapper.style.transition = 'none';
+        mapWrapper.classList.remove('transition-transform', 'duration-300', 'transition', 'ease-in-out');
 
-    e.preventDefault();
-}, { passive: false });
-
-mapContainer.addEventListener('touchmove', (e) => {
-
-    // pinch
-    if (touchState.pinch && e.touches.length === 2) {
-
-        const t0 = e.touches[0];
-        const t1 = e.touches[1];
-
-        const midX = (t0.clientX + t1.clientX) / 2;
-        const midY = (t0.clientY + t1.clientY) / 2;
-
-        const newDist = distance(e.touches);
-        const scaleFactor = newDist / touchState.pinchStartDist;
-
-        let newZoom = touchState.pinchStartZoom * scaleFactor;
-        newZoom = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, newZoom));
-
-        const prevZoom = currentZoom;
-        currentZoom = newZoom;
-
-        const Z_min = CONFIG.MIN_ZOOM;
-        const Z_max = CONFIG.MAX_ZOOM;
-        const Range = Z_max - Z_min;
-        const Pcurved = (newZoom - Z_min) / Range;
-        const Plinear = Math.sqrt(Math.max(0, Pcurved));
-        const sliderValue = Z_min + (Plinear * Range);
-        zoomSlider.value = sliderValue;
-
-
-        const rect = mapContainer.getBoundingClientRect();
-        const localX = midX - rect.left;
-        const localY = midY - rect.top;
-
-        const startMarginX = parseFloat(mapWrapper.style.marginLeft) || 0;
-        const startMarginY = parseFloat(mapWrapper.style.marginTop) || 0;
-
-        const mapX_before = mapContainer.scrollLeft + localX - startMarginX;
-        const mapY_before = mapContainer.scrollTop + localY - startMarginY;
-
-        applyZoom(false, sliderValue, true);
-
-        const endMarginX = parseFloat(mapWrapper.style.marginLeft) || 0;
-        const endMarginY = parseFloat(mapWrapper.style.marginTop) || 0;
-
-        const zoomRatio = currentZoom / prevZoom;
-
-
-        const newScrollLeft = (mapX_before * zoomRatio) + endMarginX - localX;
-        const newScrollTop = (mapY_before * zoomRatio) + endMarginY - localY;
-
-        mapContainer.scrollLeft = newScrollLeft;
-        mapContainer.scrollTop = newScrollTop;
-
-
-        e.preventDefault();
-        return;
-    }
-
-}, { passive: false });
-
-mapContainer.addEventListener('touchend', () => {
-    touchState.dragging = false;
-    touchState.pinch = false;
-});
-
-
-
-
-
-function calculateSquareSize() {
-    if (!mapViewportWrapper || !mapContainer || !CONFIG.BASE_WIDTH) return;
-
-    const availableWidth = mapViewportWrapper.clientWidth;
-    const availableHeight = mapViewportWrapper.clientHeight;
-    const size = Math.min(availableWidth, availableHeight);
-
-    mapContainer.style.width = `${size}px`;
-    mapContainer.style.height = `${size}px`;
-
-    applyZoom(true, parseFloat(zoomSlider.value));
-}
-
-
-function applyZoom(recenterViewAfterZoom = false, newSliderValue = null, suppressScrollReset = false) {
-    if (!CONFIG.BASE_WIDTH) return;
-
-    const newWidth = CONFIG.BASE_WIDTH * currentZoom;
-    const newHeight = CONFIG.BASE_HEIGHT * currentZoom;
-
-    mapWrapper.style.width = `${newWidth}px`;
-    mapWrapper.style.height = `${newHeight}px`;
-    mapWrapper.style.transform = '';
-
-
-
-    const pinFinalScale = pinCustomScale;
-    const pins = document.querySelectorAll('.map-pin');
-
-    pins.forEach(pinElement => {
-        const pinX = parseFloat(pinElement.getAttribute('data-pin-x'));
-        const pinY = parseFloat(pinElement.getAttribute('data-pin-y'));
-
-        pinElement.style.left = `${pinX * currentZoom}px`;
-        pinElement.style.top = `${pinY * currentZoom}px`;
-
-
-        pinElement.style.transform = `translate(-50%, -50%) scale(${pinFinalScale})`;
-    });
-
-    const mapContainerWidth = mapContainer.clientWidth;
-    const mapContainerHeight = mapContainer.clientHeight;
-
-    let leftOffset = 0;
-    let topOffset = 0;
-    let newScrollX = mapContainer.scrollLeft;
-    let newScrollY = mapContainer.scrollTop;
-
-    if (!suppressScrollReset) {
-        if (newWidth < mapContainerWidth) {
-            leftOffset = (mapContainerWidth - newWidth) / 2;
-            newScrollX = 0;
-        } else if (recenterViewAfterZoom) {
-            newScrollX = (newWidth - mapContainerWidth) / 2;
+        if (!document.getElementById('pinOverlayLayer')) {
+            pinOverlayLayer = document.createElement('div');
+            pinOverlayLayer.id = 'pinOverlayLayer';
+            mapContainer.appendChild(pinOverlayLayer);
+        } else {
+            pinOverlayLayer = document.getElementById('pinOverlayLayer');
         }
-    }
 
-    if (!suppressScrollReset) {
-        mapContainer.scrollLeft = newScrollX;
-        mapContainer.scrollTop = newScrollY;
-    }
+        mapWrapper.style.width = CONFIG.BASE_WIDTH + 'px';
+        mapWrapper.style.height = CONFIG.BASE_HEIGHT + 'px';
 
-    mapWrapper.style.marginLeft = `${leftOffset}px`;
-    mapWrapper.style.marginTop = `${topOffset}px`;
+        configureUI();
 
+        setupControls();
+        renderViewButtons();
 
+        if (MAP_VIEWS.length > 0) mapImage.src = MAP_VIEWS[0].url;
 
+        state.scale = CONFIG.INITIAL_ZOOM;
+        pinSettings.customScale = CONFIG.PIN_DEFAULT_SCALE;
 
-    mapContainer.scrollLeft = newScrollX;
-    mapContainer.scrollTop = newScrollY;
+        centerMap();
+        createPins();
+        scheduleRender();
+        preloadImages();
 
-    if (newSliderValue !== null) {
-        zoomSlider.value = newSliderValue;
-    }
-}
+        const loading = document.getElementById('loadingViews');
+        if(loading) loading.remove();
 
-
-function getEventPoint(e) {
-    if (e.touches && e.touches.length > 0) {
-        return { pageX: e.touches[0].pageX, pageY: e.touches[0].pageY };
-    }
-    return { pageX: e.pageX, pageY: e.pageY };
-}
-
-//Drag Start
-
-function startDrag(e) {
-    if (e.touches && e.touches.length > 1) return;
-
-    if (e.target.closest('#detailModal') || e.target.closest('#mapControls')) return;
-
-    const point = getEventPoint(e);
-    isDown = true;
-    isDragging = false; // Reset drag state on press
-    mapContainer.classList.add('dragging');
-
-    startX = point.pageX;
-    startY = point.pageY;
-    scrollLeft = mapContainer.scrollLeft;
-    scrollTop = mapContainer.scrollTop;
-
-    if (e.type === 'touchstart' || e.type === 'mousedown') {
-         e.preventDefault();
+    } catch (e) {
+        console.error("Map Init Error:", e);
     }
 }
 
-//Drag Move
-function moveDrag(e) {
-    if (e.touches && e.touches.length > 1) return;
-
-    if (!isDown) return;
-    e.preventDefault();
-
-    const point = getEventPoint(e);
-
-    const distMovedX = point.pageX - startX;
-    const distMovedY = point.pageY - startY;
-
-    if (Math.abs(distMovedX) > DRAG_THRESHOLD || Math.abs(distMovedY) > DRAG_THRESHOLD) {
-        isDragging = true;
+//set variables from json
+function configureUI() {
+    if (zoomSlider) {
+        zoomSlider.min = CONFIG.MIN_ZOOM;
+        zoomSlider.max = CONFIG.MAX_ZOOM;
+        zoomSlider.step = CONFIG.ZOOM_STEP;
+        zoomSlider.value = CONFIG.INITIAL_ZOOM;
     }
 
-    if (isDragging) {
-        // (1:1 movement for cursor sticking)
-        mapContainer.scrollLeft = scrollLeft - distMovedX;
-        mapContainer.scrollTop = scrollTop - distMovedY;
+    if (pinScaleSlider) {
+        pinScaleSlider.min = CONFIG.PIN_MIN_SCALE;
+        pinScaleSlider.max = CONFIG.PIN_MAX_SCALE;
+        pinScaleSlider.step = CONFIG.PIN_SCALE_STEP;
+        pinScaleSlider.value = CONFIG.PIN_DEFAULT_SCALE;
     }
 }
 
-//Drag End.
-
-function endDrag() {
-    if (e.touches && e.touches.length > 1) return;
-
-    isDown = false;
-    mapContainer.classList.remove('dragging');
+function centerMap() {
+    const rect = mapContainer.getBoundingClientRect();
+    state.x = (rect.width - (CONFIG.BASE_WIDTH * state.scale)) / 2;
+    state.y = (rect.height - (CONFIG.BASE_HEIGHT * state.scale)) / 2;
+    scheduleRender();
 }
 
+function scheduleRender() {
+    if (isRenderScheduled) return;
+    isRenderScheduled = true;
+    requestAnimationFrame(render);
+}
 
-function handleWheelZoom(e) {
-    if (!CONFIG.ZOOM_STEP) return;
-    e.preventDefault();
+function render() {
+    isRenderScheduled = false;
 
-    const isZoomIn = e.deltaY < 0;
 
-    const oldSliderVal = parseFloat(zoomSlider.value);
-    let newSliderVal = oldSliderVal + (isZoomIn ? CONFIG.ZOOM_STEP : -CONFIG.ZOOM_STEP);
-
-    const Z_min = CONFIG.MIN_ZOOM;
-    const Z_max = CONFIG.MAX_ZOOM;
-
-    newSliderVal = Math.max(Z_min, Math.min(Z_max, newSliderVal));
-
-    if (newSliderVal === oldSliderVal) return;
-
-    const Range = Z_max - Z_min;
-    const P = (newSliderVal - Z_min) / Range;
-    const P_curved = Math.pow(P, 2);
-    const newZoom = Z_min + (P_curved * Range);
-
-    const oldZoom = currentZoom;
-    currentZoom = newZoom;
+    if (state.scale < CONFIG.MIN_ZOOM) state.scale = CONFIG.MIN_ZOOM;
+    if (state.scale > CONFIG.MAX_ZOOM) state.scale = CONFIG.MAX_ZOOM;
 
     const rect = mapContainer.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const mapWidth = CONFIG.BASE_WIDTH * state.scale;
+    const mapHeight = CONFIG.BASE_HEIGHT * state.scale;
 
-    const preZoomScrollX = mapContainer.scrollLeft;
-    const preZoomScrollY = mapContainer.scrollTop;
+    //clamping
+    if (mapWidth > rect.width) {
+        const minX = rect.width - mapWidth;
+        const maxX = 0;
+        state.x = Math.max(minX, Math.min(maxX, state.x));
+    } else {
+        state.x = (rect.width - mapWidth) / 2;
+    }
 
-    const marginX = parseFloat(mapWrapper.style.marginLeft || 0);
-    const marginY = parseFloat(mapWrapper.style.marginTop || 0);
+    if (mapHeight > rect.height) {
+        const minY = rect.height - mapHeight;
+        const maxY = 0;
+        state.y = Math.max(minY, Math.min(maxY, state.y));
+    } else {
+        state.y = (rect.height - mapHeight) / 2;
+    }
 
-    const mapPointX = (mouseX + preZoomScrollX) - marginX;
-    const mapPointY = (mouseY + preZoomScrollY) - marginY;
+    mapWrapper.style.transform = `translate3d(${state.x}px, ${state.y}px, 0) scale(${state.scale})`;
 
-    applyZoom(false, newSliderVal);
+    if (pinSettings.visible) {
+        const len = pinElementsCache.length;
+        for (let i = 0; i < len; i++) {
+            const pinObj = pinElementsCache[i];
+            const screenX = (pinObj.x * state.scale) + state.x;
+            const screenY = (pinObj.y * state.scale) + state.y;
+            pinObj.el.style.transform = `translate(-50%, -50%) translate(${screenX}px, ${screenY}px) scale(${pinSettings.customScale})`;
+        }
+    }
 
-    const zoomRatio = currentZoom / oldZoom;
-
-    const newScrollX = (mapPointX * zoomRatio) + marginX - mouseX;
-    const newScrollY = (mapPointY * zoomRatio) + marginY - mouseY;
-
-    mapContainer.scrollLeft = newScrollX;
-    mapContainer.scrollTop = newScrollY;
-}
-
-window.handleZoomSlider = function(value) {
-    const Z_linear = parseFloat(value);
-    const Z_min = CONFIG.MIN_ZOOM;
-    const Z_max = CONFIG.MAX_ZOOM;
-    const Range = Z_max - Z_min;
-
-    const P = (Z_linear - Z_min) / Range;
-    const P_curved = Math.pow(P, 2);
-
-    currentZoom = Z_min + (P_curved * Range);
-
-    applyZoom(true, Z_linear);
-}
-
-window.handlePinScaleSlider = function(value) {
-    pinCustomScale = parseFloat(value);
-    applyZoom(false, null);
-}
-
-window.panMap = function(direction) {
-    if (!CONFIG.PAN_AMOUNT) return;
-    const scrollBehavior = { behavior: 'smooth' };
-    const panDistance = CONFIG.PAN_AMOUNT;
-
-    switch(direction) {
-        case 'up':
-            mapContainer.scrollBy({ top: -panDistance, ...scrollBehavior });
-            break;
-        case 'down':
-            mapContainer.scrollBy({ top: panDistance, ...scrollBehavior });
-            break;
-        case 'left':
-            mapContainer.scrollBy({ left: -panDistance, ...scrollBehavior });
-            break;
-        case 'right':
-            mapContainer.scrollBy({ left: panDistance, ...scrollBehavior });
-            break;
+    if (zoomSlider) {
+        zoomSlider.value = state.scale;
+    }
+    if (currentZoomValueLabel) {
+        currentZoomValueLabel.textContent = Math.round(state.scale * 100) + '%';
     }
 }
 
-function preloadImages() {
-    const imagesToPreload = new Set();
+//inputs
 
-    PINS.forEach(pin => {
-        if (pin.detailImages && Array.isArray(pin.detailImages)) {
-            pin.detailImages.forEach(url => imagesToPreload.add(url));
+function setupControls() {
+
+    //mouse wheel to zoom
+    mapContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const rect = mapContainer.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const direction = e.deltaY > 0 ? -1 : 1;
+        const factor = 0.15;
+
+        let newScale = state.scale * (1 + direction * factor);
+        newScale = Math.max(CONFIG.MIN_ZOOM, Math.min(CONFIG.MAX_ZOOM, newScale));
+
+        zoomToPoint(newScale, mouseX, mouseY);
+    }, { passive: false });
+
+    let startX = 0, startY = 0;
+    let initialX = 0, initialY = 0;
+    let pinchStartDist = 0;
+    let pinchStartScale = 1;
+
+    //touch controls
+    mapContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            state.isDragging = true;
+            state.hasMoved = false;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            initialX = state.x;
+            initialY = state.y;
+        } else if (e.touches.length === 2) {
+            state.isDragging = false;
+            pinchStartDist = getPinchDist(e);
+            pinchStartScale = state.scale;
         }
+    }, { passive: false });
+
+    mapContainer.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+
+        if (e.touches.length === 2) {
+            //pinch with touch
+            const currDist = getPinchDist(e);
+            const scaleFactor = currDist / pinchStartDist;
+            const center = getPinchCenter(e);
+            const newScale = pinchStartScale * scaleFactor;
+            zoomToPoint(newScale, center.x, center.y);
+
+        } else if (e.touches.length === 1 && state.isDragging) {
+            //pan with touch
+            const dx = e.touches[0].clientX - startX;
+            const dy = e.touches[0].clientY - startY;
+
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) state.hasMoved = true;
+
+            state.x = initialX + dx;
+            state.y = initialY + dy;
+            scheduleRender();
+        }
+    }, { passive: false });
+
+    const endTouch = () => { state.isDragging = false; };
+    mapContainer.addEventListener('touchend', endTouch);
+    mapContainer.addEventListener('touchcancel', endTouch);
+
+    //mouse
+    mapContainer.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+
+        state.isDragging = true;
+        state.hasMoved = false;
+
+        startX = e.clientX;
+        startY = e.clientY;
+        initialX = state.x;
+        initialY = state.y;
+
+        mapContainer.style.cursor = 'grabbing';
     });
 
-    imagesToPreload.forEach(url => {
-        const img = new Image();
-        img.src = url;
+    window.addEventListener('mousemove', (e) => {
+        if (!state.isDragging) return;
+        e.preventDefault();
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) state.hasMoved = true;
+
+        state.x = initialX + dx;
+        state.y = initialY + dy;
+        scheduleRender();
+    });
+
+    window.addEventListener('mouseup', () => {
+        state.isDragging = false;
+        mapContainer.style.cursor = 'grab';
+    });
+
+    zoomSlider.addEventListener('input', (e) => {
+        const rect = mapContainer.getBoundingClientRect();
+        zoomToPoint(parseFloat(e.target.value), rect.width/2, rect.height/2);
+    });
+
+    pinScaleSlider.addEventListener('input', (e) => {
+        pinSettings.customScale = parseFloat(e.target.value);
+        scheduleRender();
+    });
+
+    //smoothing
+    const panSmooth = (dx, dy) => {
+        const startX = state.x;
+        const startY = state.y;
+        const targetX = startX + dx;
+        const targetY = startY + dy;
+        const startTime = performance.now();
+        const duration = 300;
+
+        function animate(time) {
+            let progress = (time - startTime) / duration;
+            if (progress > 1) progress = 1;
+            const ease = 1 - Math.pow(1 - progress, 3);
+            state.x = startX + (targetX - startX) * ease;
+            state.y = startY + (targetY - startY) * ease;
+            scheduleRender();
+            if (progress < 1) requestAnimationFrame(animate);
+        }
+        requestAnimationFrame(animate);
+    };
+
+    //pan buttons on page
+    document.getElementById('panUp').addEventListener('click', () => panSmooth(0, CONFIG.PAN_AMOUNT));
+    document.getElementById('panDown').addEventListener('click', () => panSmooth(0, -CONFIG.PAN_AMOUNT));
+    document.getElementById('panLeft').addEventListener('click', () => panSmooth(CONFIG.PAN_AMOUNT, 0));
+    document.getElementById('panRight').addEventListener('click', () => panSmooth(-CONFIG.PAN_AMOUNT, 0));
+
+    //popup gallery controls
+    prevButton.addEventListener('click', () => cycleImage(-1));
+    nextButton.addEventListener('click', () => cycleImage(1));
+
+    pinToggleCheckbox.addEventListener('change', (e) => {
+        pinSettings.visible = e.target.checked;
+        pinToggleLabel.textContent = e.target.checked ? "Show Pins" : "Hide Pins";
+        pinOverlayLayer.style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+        scheduleRender();
     });
 }
 
-// PINS
+function zoomToPoint(newScale, screenX, screenY) {
+    const oldScale = state.scale;
+    const worldX = (screenX - state.x) / oldScale;
+    const worldY = (screenY - state.y) / oldScale;
+    state.scale = newScale;
+    state.x = screenX - (worldX * state.scale);
+    state.y = screenY - (worldY * state.scale);
+    scheduleRender();
+}
 
-function renderPins() {
-    const existingPins = mapWrapper.querySelectorAll('.map-pin');
-    existingPins.forEach(p => p.remove());
+function getPinchDist(e) {
+    return Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+    );
+}
 
-    const isChecked = pinToggleCheckbox.checked; // Get initial state once
-    const pinFragment = document.createDocumentFragment();
+function getPinchCenter(e) {
+    const rect = mapContainer.getBoundingClientRect();
+    return {
+        x: ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left,
+        y: ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top
+    };
+}
+
+
+//pins
+
+function createPins() {
+    pinOverlayLayer.innerHTML = '';
+    pinElementsCache = [];
 
     PINS.forEach(pin => {
-        const pinElement = document.createElement('div');
-        //  transition
-        pinElement.className = 'map-pin absolute transition-opacity duration-300';
-        pinElement.setAttribute('data-pin-id', pin.id);
-        pinElement.setAttribute('data-pin-x', pin.x);
-        pinElement.setAttribute('data-pin-y', pin.y);
+        const el = document.createElement('div');
+        el.className = 'map-pin';
+        el.innerHTML = `<img src="${pin.primaryIconUrl}" width="${pin.iconSizeX}" height="${pin.iconSizeY}" alt="${pin.title}">`;
 
-        // ANIMATION
-        pinElement.style.transformOrigin = '50% 50%';
-        pinElement.style.opacity = isChecked ? 1 : 0;
-        pinElement.style.pointerEvents = isChecked ? 'auto' : 'none';
-        pinElement.style.display = isChecked ? 'flex' : 'none';
-
-
-        // use pin.primaryIconUrl as the source
-        pinElement.innerHTML = `
-            <img src="${pin.primaryIconUrl}"
-                 alt="${pin.title}"
-                 style="width: ${pin.iconSizeX}px; height: ${pin.iconSizeY}px; pointer-events: none;"
-                 onerror="this.src=''"
-                 draggable="false"
-            >
-        `;
-
-
-        let touchMovementTolerance = 100;      //amount needed to drag inorder to count as a click instead of panning
-
-        pinElement.addEventListener('touchstart', (e) => {
-            pinElement._touchMoved = false;
-            pinElement._touchStartX = e.touches[0].clientX;
-            pinElement._touchStartY = e.touches[0].clientY;
-        }, { passive: true });
-
-        pinElement.addEventListener('touchmove', (e) => {
-            const dx = e.touches[0].clientX - pinElement._touchStartX;
-            const dy = e.touches[0].clientY - pinElement._touchStartY;
-            if (Math.abs(dx) > touchMovementTolerance || Math.abs(dy) > touchMovementTolerance) {
-                pinElement._touchMoved = true;
-            }
-        }, { passive: true });
-
-        pinElement.addEventListener('touchend', (e) => {
+        el.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!pinElement._touchMoved) showDetail(pin);
-        }, { passive: true });
-
-        pinElement.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (!isDragging) showDetail(pin);
+            if (!state.hasMoved) openModal(pin);
         });
 
-        pinFragment.appendChild(pinElement);
+        pinOverlayLayer.appendChild(el);
+        pinElementsCache.push({ el: el, x: pin.x, y: pin.y });
     });
-    mapWrapper.appendChild(pinFragment);
-    applyZoom(false, parseFloat(zoomSlider.value));
 }
 
+//Popup window when you click on a pin
+
+function openModal(pin) {
+    detailTitle.textContent = pin.title;
+    detailDescription.textContent = pin.description;
+
+    galleryState.images = (pin.detailImages && pin.detailImages.length)
+        ? pin.detailImages.filter(i => i)
+        : [pin.primaryIconUrl];
+
+    galleryState.currentIndex = 0;
+    updateGalleryUI();
+
+    detailModal.classList.remove('hidden');
+    detailModal.classList.add('flex');
+    setTimeout(() => {
+        modalContent.classList.remove('opacity-0', 'scale-95');
+        modalContent.classList.add('opacity-100', 'scale-100');
+    }, 10);
+}
+
+window.closeModal = function() {
+    modalContent.classList.remove('opacity-100', 'scale-100');
+    modalContent.classList.add('opacity-0', 'scale-95');
+    setTimeout(() => {
+        detailModal.classList.remove('flex');
+        detailModal.classList.add('hidden');
+    }, 300);
+};
+
+window.handleModalClick = function(e) {
+    if (e.target === detailModal) closeModal();
+};
+
+function updateGalleryUI() {
+    const url = galleryState.images[galleryState.currentIndex];
+    detailImage.src = url;
+
+    if (galleryState.images.length > 1) {
+        galleryContainer.classList.remove('hidden');
+        prevButton.style.display = 'block';
+        nextButton.style.display = 'block';
+        galleryIndicators.innerHTML = galleryState.images.map((_, i) =>
+            `<div class="w-2 h-2 rounded-full cursor-pointer transition-colors ${i === galleryState.currentIndex ? 'bg-white' : 'bg-gray-600'}" onclick="jumpToImage(${i})"></div>`
+        ).join('');
+    } else {
+        prevButton.style.display = 'none';
+        nextButton.style.display = 'none';
+        galleryIndicators.innerHTML = '';
+    }
+}
+
+window.cycleImage = function(dir) {
+    let i = galleryState.currentIndex + dir;
+    if (i < 0) i = galleryState.images.length - 1;
+    if (i >= galleryState.images.length) i = 0;
+    galleryState.currentIndex = i;
+    updateGalleryUI();
+};
+
+window.jumpToImage = function(i) {
+    galleryState.currentIndex = i;
+    updateGalleryUI();
+};
 
 
 function renderViewButtons() {
     viewButtonsContainer.innerHTML = '';
     MAP_VIEWS.forEach((view, index) => {
-        const button = document.createElement('button');
-        const activeClass = index === 0 ? 'bg-primary hover:bg-indigo-600' : 'bg-gray-700 hover:bg-gray-600';
-
-        button.className = `w-full text-sm font-medium py-2 px-3 rounded-md transition duration-150 ${activeClass}`;
-        button.textContent = view.name;
-        button.addEventListener('click', () => changeMapView(index));
-        viewButtonsContainer.appendChild(button);
-    });
-}
-
-window.changeMapView = function(index) {
-    if (!MAP_VIEWS.length) return;
-    const view = MAP_VIEWS[index];
-    mapImage.src = view.url;
-    mapImage.alt = view.name;
-
-    viewButtonsContainer.querySelectorAll('button').forEach((btn, i) => {
-        btn.classList.remove('bg-primary', 'hover:bg-indigo-600');
-        btn.classList.add('bg-gray-700', 'hover:bg-gray-600');
-        if (i === index) {
-            btn.classList.remove('bg-gray-700', 'hover:bg-gray-600');
-            btn.classList.add('bg-primary', 'hover:bg-indigo-600');
-        }
-    });
-}
-
-function enableControls() {
-    controlButtons.forEach(btn => btn.disabled = false);
-    viewButtonsContainer.querySelectorAll('button').forEach(btn => btn.disabled = false);
-}
-
-//window
-window.closeModal = function() {
-    modalContent.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => {
-        detailModal.classList.add('hidden');
-        detailModal.classList.remove('flex');
-    }, 300);
-}
-
-window.handleModalClick = function(event) {
-    if (event.target === detailModal) {
-        closeModal();
-    }
-}
-function showDetail(pin) {
-    detailTitle.textContent = pin.title;
-    detailDescription.textContent = pin.description;
-
-    const iconUrls = [];
-    if (pin.primaryIconUrl) {
-        iconUrls.push(pin.primaryIconUrl);
-    }
-    if (pin.additionalIcons && Array.isArray(pin.additionalIcons)) {
-        iconUrls.push(...pin.additionalIcons);
-    }
-
-    if (pin.detailImages && Array.isArray(pin.detailImages) && pin.detailImages.length > 0) {
-        currentPinGallery = pin.detailImages.map(url => ({
-            url: url,
-            //allows multiple "caption" images
-            caption: iconUrls
-        }));
-    } else {
-        currentPinGallery = [];
-    }
-
-    currentImageIndex = 0;
-    updateGallery();
-
-    detailModal.classList.remove('hidden');
-    detailModal.classList.add('flex');
-    setTimeout(() => {
-        modalContent.classList.remove('scale-95', 'opacity-0');
-    }, 10);
-}
-
-function updateGallery() {
-    if (currentPinGallery.length > 0) {
-        galleryContainer.classList.remove('hidden');
-        const currentImage = currentPinGallery[currentImageIndex];
-
-        detailImage.src = currentImage.url;
-        detailImage.alt = 'Gallery Image';
-
-        imageCaption.innerHTML = '';
-        const iconUrls = currentImage.caption;
-
-        if (Array.isArray(iconUrls) && iconUrls.length > 0) {
-            let html = '';
-            iconUrls.forEach(url => {
-                html += `<img src="${url}" alt="Pin Icon" class="h-6 w-auto mx-1">`;
+        const btn = document.createElement('button');
+        btn.className = `w-full text-left px-4 py-2 rounded mb-1 text-sm font-medium transition-colors ${index === 0 ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
+        btn.textContent = view.name;
+        btn.onclick = () => {
+            mapImage.src = view.url;
+            Array.from(viewButtonsContainer.children).forEach((b, i) => {
+                b.className = `w-full text-left px-4 py-2 rounded mb-1 text-sm font-medium transition-colors ${i === index ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`;
             });
-            imageCaption.innerHTML = html;
-        } else {
-             imageCaption.innerHTML = '';
-        }
-
-        const isSingleImage = currentPinGallery.length <= 1;
-        prevButton.disabled = isSingleImage || currentImageIndex === 0;
-        nextButton.disabled = isSingleImage || currentImageIndex === currentPinGallery.length - 1;
-
-        prevButton.style.display = isSingleImage ? 'none' : 'block';
-        nextButton.style.display = isSingleImage ? 'none' : 'block';
-        galleryIndicators.style.display = isSingleImage ? 'none' : 'flex';
-
-        galleryIndicators.innerHTML = currentPinGallery.map((_, i) =>
-            `<span class="h-2 w-2 rounded-full cursor-pointer gallery-indicator ${i === currentImageIndex ? 'bg-secondary' : 'bg-gray-600 hover:bg-gray-500'}" data-index="${i}"></span>`
-        ).join('');
-
-    } else {
-        galleryContainer.classList.add('hidden');
-        imageCaption.innerHTML = '<p class="text-xs text-gray-400">This location currently has no detail images.</p>';
-    }
-}
-
-window.setCurrentGalleryIndex = function(index) {
-    currentImageIndex = index;
-    updateGallery();
-}
-
-window.cycleImage = function(direction) {
-    const newIndex = currentImageIndex + direction;
-    if (newIndex >= 0 && newIndex < currentPinGallery.length) {
-        currentImageIndex = newIndex;
-        updateGallery();
-    }
-}
-
-function attachEventListeners() {
-    //Drag and Zoom
-    mapContainer.addEventListener('mousedown', startDrag);
-    mapContainer.addEventListener('mousemove', moveDrag);
-    mapContainer.addEventListener('mouseup', endDrag);
-    mapContainer.addEventListener('mouseleave', endDrag);
-    mapContainer.addEventListener('touchstart', startDrag);
-    mapContainer.addEventListener('touchmove', moveDrag);
-    mapContainer.addEventListener('touchend', endDrag);
-    mapContainer.addEventListener('touchcancel', endDrag);
-    mapContainer.addEventListener('wheel', handleWheelZoom);
-
-
-    zoomSlider.addEventListener('input', (e) => handleZoomSlider(e.target.value));
-    pinScaleSlider.addEventListener('input', (e) => handlePinScaleSlider(e.target.value));
-
-    //pan buttons
-    document.getElementById('panUp').addEventListener('click', () => panMap('up'));
-    document.getElementById('panDown').addEventListener('click', () => panMap('down'));
-    document.getElementById('panLeft').addEventListener('click', () => panMap('left'));
-    document.getElementById('panRight').addEventListener('click', () => panMap('right'));
-
-    // window background and close
-    detailModal.addEventListener('click', handleModalClick);
-    document.querySelectorAll('.modal-close-btn').forEach(btn => {
-        btn.addEventListener('click', closeModal);
-    });
-
-    // window pop-up image cycling
-    prevButton.addEventListener('click', () => cycleImage(-1));
-    nextButton.addEventListener('click', () => cycleImage(1));
-    galleryIndicators.addEventListener('click', (e) => {
-        const indicator = e.target.closest('.gallery-indicator');
-        if (indicator) {
-            const index = parseInt(indicator.getAttribute('data-index'), 10);
-            setCurrentGalleryIndex(index);
-        }
-    });
-
-    //other stuff
-
-    pinToggleCheckbox.addEventListener('change', handlePinToggle);
-    window.addEventListener('resize', calculateSquareSize);
-
-    //keyboard panning
-    window.addEventListener('keydown', handleKeyPan);
-}
-
-//Toggle Pin Button
-function handlePinToggle() {
-    const isChecked = pinToggleCheckbox.checked;
-    const pinElements = document.querySelectorAll('.map-pin');
-
-    pinToggleLabel.textContent = isChecked ? 'Show Pins' : 'Hide Pins';    //defualt text
-
-    pinElements.forEach(pin => {
-        if (isChecked) {
-
-            pin.style.display = 'flex';
-            setTimeout(() => {
-                pin.style.opacity = 1;
-                pin.style.pointerEvents = 'auto';
-            }, 10);
-        } else {
-            pin.style.opacity = 0;
-            pin.style.pointerEvents = 'none';
-
-            setTimeout(() => {
-                if (pin.style.opacity === '0') {
-                    pin.style.display = 'none';
-                }
-            }, 200); // speed for transition in ms
-        }
+        };
+        viewButtonsContainer.appendChild(btn);
     });
 }
 
-
-//panning
-window.handleKeyPan = function(e) {
-    if (detailModal.classList.contains('flex') || e.target.tagName === 'INPUT') return;
-
-    let direction = null;
-
-    switch (e.key.toLowerCase()) {
-        case 'w':
-        case 'arrowup':
-            direction = 'up';
-            break;
-        case 's':
-        case 'arrowdown':
-            direction = 'down';
-            break;
-        case 'a':
-        case 'arrowleft':
-            direction = 'left';
-            break;
-        case 'd':
-        case 'arrowright':
-            direction = 'right';
-            break;
-    }
-
-    if (direction) {
-        e.preventDefault(); //stop default browser scroll behavior
-        panMap(direction);
-    }
+function preloadImages() {
+    PINS.forEach(p => {
+        if(p.detailImages) p.detailImages.forEach(u => (new Image()).src = u);
+    });
 }
-
-
-
-//initializeMap
-async function initializeMap() {
-    try {
-        const response = await fetch('map_data.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const mapData = await response.json();
-
-        CONFIG = mapData.CONFIG;
-        PINS = mapData.PINS;
-        MAP_VIEWS = mapData.MAP_VIEWS;
-
-        preloadImages();
-
-        const loadingViews = document.getElementById('loadingViews');
-        if (loadingViews) loadingViews.remove();
-
-    } catch (error) {
-        console.error("Failed to load map data from map_data.json:", error);
-        mapImage.src = '';
-        mapViewportWrapper.innerHTML += '<p class="absolute inset-0 flex items-center justify-center text-red-400 bg-gray-900 bg-opacity-70 z-20 rounded-xl">Error loading map data. Please ensure map_data.json exists.</p>';
-        controlButtons.forEach(btn => btn.disabled = true);
-        viewButtonsContainer.innerHTML = '<p class="text-xs text-red-400">Data load failed.</p>';
-        return;
-    }
-
-    if (MAP_VIEWS.length > 0) {
-        mapImage.src = MAP_VIEWS[0].url;
-        mapImage.alt = MAP_VIEWS[0].name;
-    } else {
-         mapImage.src = '';
-    }
-
-    zoomSlider.min = CONFIG.MIN_ZOOM;
-    zoomSlider.max = CONFIG.MAX_ZOOM;
-    zoomSlider.step = CONFIG.ZOOM_STEP;
-
-    pinScaleSlider.min = CONFIG.PIN_MIN_SCALE;
-    pinScaleSlider.max = CONFIG.PIN_MAX_SCALE;
-
-    pinCustomScale = CONFIG.PIN_DEFAULT_SCALE;
-    pinScaleSlider.value = pinCustomScale;
-
-    const initialSliderValue = CONFIG.INITIAL_ZOOM;
-    zoomSlider.value = initialSliderValue;
-
-    const Z_min = CONFIG.MIN_ZOOM;
-    const Z_max = CONFIG.MAX_ZOOM;
-    const Range = Z_max - Z_min;
-    const P = (initialSliderValue - Z_min) / Range;
-    const P_curved = Math.pow(P, 2);
-    currentZoom = Z_min + (P_curved * Range);
-
-    renderPins();
-    renderViewButtons();
-    calculateSquareSize();
-
-    attachEventListeners();
-    enableControls();
-
-    pinToggleCheckbox.checked = true; //checkbox is true on reload
-    pinToggleLabel.textContent = 'Show Pins';
-
-    console.log("Map Initialized successfully.");
-}
-
 
 document.addEventListener('DOMContentLoaded', initializeMap);

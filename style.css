@@ -1,52 +1,83 @@
 /* style.css */
 
 .map-container {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    overflow: hidden;
     cursor: grab;
-  /*  touch-action: none; /* Prevents default touch behavior, allowing custom drag/pan */
-    border-radius: 0.85rem; /*rounded corners*/
-}
-.map-container::-webkit-scrollbar {
-    display: none;
-}
-
-
-.image-pixelated {
-    image-rendering: crisp-edges;
-    image-rendering: pixelated;
-    -ms-interpolation-mode: nearest-neighbor;
+    touch-action: none;
+    border-radius: 0.85rem;
+    position: relative;
+    background-color: #1f2937;
+    width: 100%;
+    height: 100%;
+    transform: translateZ(0);
 }
 
-/* style for pins on the map*/
+.map-container:active {
+    cursor: grabbing;
+}
+
+#mapImageWrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+    pointer-events: none;
+    transition: none !important;
+}
+
+#pinOverlayLayer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+}
+
+#mapImage {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-drag: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+}
 
 .map-pin {
+    position: absolute;
     cursor: pointer;
-    transition: opacity 0.3s ease, box-shadow 0.1s ease; /* Added box-shadow transition */
-    z-index: 10;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+
     transform: translate(-50%, -50%);
 
-    border-radius: 2%;
-
-    box-shadow: 0 0 0 2px #FFFFFF;
+    transition: filter 0.2s ease, opacity 0.2s ease;
 }
 
-
-.map-pin:hover {
-    box-shadow:
-        0 0 0 3px #FFFFFF, /* Outline */
-        0 0 15px 5px rgba(255, 255, 255, 0.9); /* Glow */
+.map-pin img {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+    transition: transform 0.1s ease;
 }
 
+.map-pin:hover img {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+    transform: scale(1.1);
+}
 
-
+/* UI Controls */
 .range-slider {
     width: 100%;
     height: 0.5rem;
-    background-color: #FFF; /* gray-700 */
+    background-color: #FFF;
     border-radius: 0.5rem;
     appearance: none;
     cursor: pointer;
@@ -56,96 +87,51 @@
     width: 1rem;
     height: 1rem;
     border-radius: 50%;
-    background: #2a5951; /* primary color */
+    background: #2a5951;
     cursor: pointer;
 }
-.range-slider::-moz-range-thumb {
-    width: 1rem;
-    height: 1rem;
-    border-radius: 50%;
-    background: #FFF;
-    cursor: pointer;
-    border: none;
-}
-
-/* Toggle Button */
 .toggle {
   position: relative;
   display: inline-block;
-  width: 2.75rem; /* w-11 (44px) */
-  height: 1.5rem; /* h-6 (24px) */
+  width: 2.75rem;
+  height: 1.5rem;
   cursor: pointer;
 }
-
-.toggle input {
-  display: none;
-}
-
+.toggle input { display: none; }
 .slider {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background-color: #374151;
   transition: 0.4s;
   border-radius: 9999px;
 }
-
 .slider:before {
   position: absolute;
   content: "";
   height: 1.25rem;
   width: 1.25rem;
-  left: 2px;
-  top: 2px;
+  left: 2px; top: 2px;
   background-color: #FFF;
   transition: 0.4s;
   border-radius: 50%;
 }
-
-input:checked + .slider {
-  background-color: #2a5951;
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-input:focus + .slider {
-    box-shadow: 0 0 0 2px #2a5951;
-}
-
-/* panning dpad*/
+input:checked + .slider { background-color: #2a5951; }
+input:checked + .slider:before { transform: translateX(20px); }
 
 .pan-button {
-    width: 2.5rem; /* 40px */
-    height: 2.5rem; /* 40px */
-    @apply flex items-center justify-center bg-gray-700 text-gray-300 transition duration-150 hover:bg-gray-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary;
-    border-radius: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #374151;
+    color: #d1d5db;
+    transition: all 0.15s;
 }
+.pan-button:hover { background-color: #4b5563; color: white; }
+.pan-button:active { background-color: #2a5951; }
 
-.grid.grid-cols-3 > button:nth-child(4) { /* Pan Left */
-    border-top-left-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
-}
-.grid.grid-cols-3 > button:nth-child(6) { /* Pan Right */
-    border-top-right-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
-}
-/* (Cell 4) */
-.grid.grid-cols-3 > button:nth-child(4) {
-    border-top-left-radius: 0.5rem;
-}
-/* (Cell 6) */
-.grid.grid-cols-3 > button:nth-child(6) {
-    border-top-right-radius: 0.5rem;
-}
-/* (Cell 7) */
-.grid.grid-cols-3 > button:nth-child(7) {
-    border-bottom-left-radius: 0.5rem;
-}
-/* (Cell 9) */
-.grid.grid-cols-3 > button:nth-child(9) {
-    border-bottom-right-radius: 0.5rem;
-}
+.grid.grid-cols-3 > button:nth-child(2) { border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; }
+.grid.grid-cols-3 > button:nth-child(4) { border-top-left-radius: 0.5rem; border-bottom-left-radius: 0.5rem; }
+.grid.grid-cols-3 > button:nth-child(6) { border-top-right-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
+.grid.grid-cols-3 > button:nth-child(8) { border-bottom-left-radius: 0.5rem; border-bottom-right-radius: 0.5rem; }
