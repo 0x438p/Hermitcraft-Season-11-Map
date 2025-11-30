@@ -167,7 +167,8 @@
       "description": "iJevin's Base",
       "detailImages": [
         "Images/Bases/iJevinBase.png",
-        "Images/Bases/iJevinBase2.png"
+        "Images/Bases/iJevinBase2.png",
+        "Images/Bases/iJevinBase3.png"
       ],
       "primaryIconUrl": "Images/Hermits/iJevin-face.png",
       "additionalIcons": [],
@@ -181,7 +182,8 @@
       "title": "ImpulseSV",
       "description": "ImpulseSV's Base",
       "detailImages": [
-        "Images/Bases/ImpulseSVBase.png"
+        "Images/Bases/ImpulseSVBase.png",
+        "Images/Bases/ImpulseSVBase2.png"
       ],
       "primaryIconUrl": "Images/Hermits/ImpulseSV-face.png",
       "additionalIcons": [],
@@ -195,7 +197,8 @@
       "title": "JoeHills",
       "description": "JoeHills's Base",
       "detailImages": [
-        "Images/Bases/JoeHillsBase.png"
+        "Images/Bases/JoeHillsBase.png",
+        "Images/Bases/JoeHillsBase2.png"
       ],
       "primaryIconUrl": "Images/Hermits/JoeHills-face.png",
       "additionalIcons": [],
@@ -209,7 +212,9 @@
       "title": "Keralis",
       "description": "Keralis's Base",
       "detailImages": [
-        "Images/Bases/KeralisBase.png"
+        "Images/Bases/KeralisBase.png",
+        "Images/Bases/KeralisBase2.png"
+
       ],
       "primaryIconUrl": "Images/Hermits/Keralis-face.png",
       "additionalIcons": [],
@@ -294,7 +299,8 @@
       "title": "TangoTek",
       "description": "TangoTek's Base",
       "detailImages": [
-        "Images/Bases/TangoBase.png"
+        "Images/Bases/TangoBase.png",
+        "Images/Bases/TangoBase2.png"
       ],
       "primaryIconUrl": "Images/Hermits/TangoTek-face.png",
       "additionalIcons": [],
