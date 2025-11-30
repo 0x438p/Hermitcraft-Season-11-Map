@@ -5,9 +5,9 @@ let PINS = [];
 let MAP_VIEWS = [];
 
 const mapContainer = document.getElementById('mapContainer');
-const mapWrapper = document.getElementById('mapImageWrapper'); // Holds the Image
+const mapWrapper = document.getElementById('mapImageWrapper'); 
 const mapImage = document.getElementById('mapImage');
-let pinOverlayLayer = null; // Will hold the Pins (Created in JS)
+let pinOverlayLayer = null;
 
 //ui
 const zoomSlider = document.getElementById('zoomSlider');
